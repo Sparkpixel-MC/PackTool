@@ -1,0 +1,14 @@
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\bin\Debug\net8.0-windows\PackTool.Cli.exe
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\bin\Debug\net8.0-windows\PackTool.Cli.deps.json
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\bin\Debug\net8.0-windows\PackTool.Cli.runtimeconfig.json
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\bin\Debug\net8.0-windows\PackTool.Cli.dll
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\bin\Debug\net8.0-windows\PackTool.Cli.pdb
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.AssemblyInfoInputs.cache
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.AssemblyInfo.cs
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.csproj.CoreCompileInputs.cache
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.dll
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\refint\PackTool.Cli.dll
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.pdb
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\PackTool.Cli.genruntimeconfig.cache
+C:\Users\qingh\Desktop\packtool-gui\PackTool.Cli\obj\Debug\net8.0-windows\ref\PackTool.Cli.dll

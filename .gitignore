@@ -1,0 +1,27 @@
+# ---- .NET / WPF ----
+[Pp]ack[Tt]ool/bin/
+[Pp]ack[Tt]ool[Cc]li/bin/
+[Pp]ack[Tt]ool/obj/
+[Pp]ack[Tt]ool[Cc]li/obj/
+*.user
+*.suo
+.vs/
+# built exes (delete this line if you want release/ tracked in git)
+release/
+
+# ---- Node / Electron (original app) ----
+node_modules/
+npm-debug.log*
+
+# ---- temp / test artifacts ----
+.test/
+.test-ui/
+*.png.tmp
+
+# ---- OS junk ----
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- local crash logs (App writes to %LOCALAPPDATA%\PackTool, this is just in case) ----
+crash.log

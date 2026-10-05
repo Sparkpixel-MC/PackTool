@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Resource-Sync PackTool</title>
+<style>
+  :root {
+    --bg: #0f141a; --card: #171e27; --card2: #1d2632; --line: #2a3646;
+    --text: #e8eef4; --muted: #8fa1b3; --accent: #2e86de; --accent2: #27c5a8;
+    --ok: #27c5a8; --err: #e05252;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 600px at 70% -10%, #16222f 0%, var(--bg) 55%);
+    color: var(--text); min-height: 100vh; padding: 28px 32px;
+  }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+  h1 .accent { background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .sub { color: var(--muted); font-size: 12px; margin: 4px 0 22px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .row { display: flex; gap: 12px; align-items: center; }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+  input[type=text] {
+    flex: 1; background: var(--card2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  button {
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #fff;
+    border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px;
+    cursor: pointer; font-family: inherit; transition: filter .15s;
+  }
+  button:hover { filter: brightness(1.12); }
+  button.ghost { background: var(--card2); border: 1px solid var(--line); color: var(--text); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .dropzone {
+    border: 2px dashed var(--line); border-radius: 12px; padding: 26px;
+    text-align: center; color: var(--muted); font-size: 13px; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone.hot { border-color: var(--accent2); background: rgba(39,197,168,.06); }
+  .progress-track {
+    height: 10px; background: var(--card2); border-radius: 999px; overflow: hidden;
+    margin: 12px 0 6px;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .2s;
+  }
+  .stage { font-size: 12px; color: var(--muted); min-height: 16px; }
+  .snippet {
+    background: #0b1016; border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; font-family: Consolas, monospace; font-size: 12px;
+    color: #b9cadb; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: auto;
+  }
+  .copy { float: right; margin-bottom: 6px; }
+  .ok-msg { color: var(--ok); font-size: 13px; }
+  .err-msg { color: var(--err); font-size: 13px; }
+  .hidden { display: none; }
+  .key-display { font-family: Consolas, monospace; color: var(--accent2); font-size: 13px;
+    user-select: all; word-break: break-all; }
+</style>
+</head>
+<body>
+  <h1>Resource-<span class="accent">Sync</span> PackTool</h1>
+  <div class="sub">把资源包目录打包成 RSSYNC3 加密 dist · 产物可直接托管到任意静态服务器</div>
+
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>① 原始资源包目录</label>
+        <div class="dropzone" id="dropInput">拖拽文件夹到这里，或点击选择</div>
+        <input type="text" id="inputDir" readonly placeholder="未选择" style="width:100%;margin-top:8px">
+      </div>
+      <div>
+        <label>② 输出目录（生成 dist/ 与 metadata）</label>
+        <div class="dropzone" id="dropOutput">拖拽文件夹到这里，或点击选择</div>
+        <input type="text" id="outputDir" readonly placeholder="未选择" style="width:100%;margin-top:8px">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>③ 加密口令 wrapKey（打包与服务端 syncChannel.wrapKey 必须一致）</label>
+    <div class="row">
+      <input type="text" id="wrapKey" placeholder="留空 = 仅混淆模式（不推荐），点右侧一键生成">
+      <button class="ghost" id="genKey">⚡ 一键生成</button>
+    </div>
+    <div id="keyHint" class="key-display hidden"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>④（可选）服务器绑定 lock 值</label>
+        <input type="text" id="mcmetaLock" placeholder="zbx_rpu_server_lock">
+      </div>
+      <div>
+        <label>（可选）绑定的服务器地址，逗号分隔</label>
+        <input type="text" id="mcmetaBind" placeholder="mc.example.com, mc2.example.com:25565">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button id="packBtn" style="flex:1; padding: 14px;">开始打包</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+    <div class="stage" id="stage">等待开始</div>
+    <div id="result"></div>
+  </div>
+
+  <div class="card hidden" id="snippetCard">
+    <div class="grid2">
+      <div>
+        <button class="ghost copy" data-copy="serverSnippet">复制</button>
+        <label>游戏服 resource-synchronization-server.json</label>
+        <div class="snippet" id="serverSnippet"></div>
+      </div>
+      <div>
+        <button class="ghost copy" data-copy="clientSnippet">复制</button>
+        <label>玩家客户端 config 片段</label>
+        <div class="snippet" id="clientSnippet"></div>
+      </div>
+    </div>
+    <div class="sub" id="snippetNote" style="margin-top:8px"></div>
+  </div>
+
+<script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+name: Build and Release PackTool
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  Build-PackTool:
+    name: Build PackTool (Self-Contained EXE)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      Exe_Name: ${{ steps.Find_Exe.outputs.Exe_Name }}
+      Version: ${{ steps.Get_Version.outputs.Version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Get Version from csproj
+        id: Get_Version
+        run: |
+          set -e
+          VERSION=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' PackTool/PackTool.csproj | head -n1)
+          VERSION=${VERSION#v}
+          if [ -z "$VERSION" ]; then
+            echo "Failed to read version from PackTool/PackTool.csproj" >&2
+            exit 1
+          fi
+          echo "Version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $VERSION"
+
+      - name: Publish Self-Contained EXE
+        run: >
+          dotnet publish PackTool -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -o build/publish
+
+      - name: Locate Published EXE
+        id: Find_Exe
+        run: |
+          set -e
+          EXE=$(find build/publish -maxdepth 1 -type f -name '*.exe' 2>/dev/null | head -n 1)
+          if [ -z "$EXE" ]; then
+            echo "No EXE found in build/publish" >&2
+            ls -la build/publish || true
+            exit 1
+          fi
+          echo "Exe_Path=$EXE" >> "$GITHUB_OUTPUT"
+          echo "Exe_Name=$(basename "$EXE")" >> "$GITHUB_OUTPUT"
+          echo "Selected EXE: $EXE"
+
+      - name: Upload PackTool Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PackTool-Windows-x64
+          path: ${{ steps.Find_Exe.outputs.Exe_Path }}
+          if-no-files-found: error
+
+  Release-PackTool:
+    name: Publish Release
+    needs: Build-PackTool
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download PackTool Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PackTool-Windows-x64
+          path: Release-Assets/PackTool
+
+      - name: List Release Assets
+        run: |
+          find Release-Assets/PackTool -type f | sort
+
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ needs.Build-PackTool.outputs.Version }}
+          name: Resource-Sync PackTool v${{ needs.Build-PackTool.outputs.Version }}
+          prerelease: false
+          allowUpdates: true
+          makeLatest: true
+          artifactErrorsFailBuild: true
+          removeArtifacts: true
+          artifacts: Release-Assets/PackTool/*.exe
+          body: |
+            ## 🚀 Resource-Sync PackTool v${{ needs.Build-PackTool.outputs.Version }}
+
+            Automated build triggered by commit [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) on `${{ github.ref_name }}`.
+
+            ### 📦 Included Artifacts
+            - **Windows x64 EXE**: `${{ needs.Build-PackTool.outputs.Exe_Name }}` (self-contained, .NET runtime included)
+
+            ### 🛠️ Installation
+            1. Download `PackTool.exe` from the assets below.
+            2. Run it directly — no .NET installation required.
+
+            ### 📝 Changelog
+            The full changelog is auto-generated below. 👇
+
+            ---
+            _If you encounter any issues, please open an Issue and include your OS version, the steps to reproduce, and `%LOCALAPPDATA%\PackTool\crash.log` if it exists._
+          generateReleaseNotes: true

@@ -1,0 +1,16 @@
+{
+  "name": "packtool-gui",
+  "productName": "Resource-Sync PackTool",
+  "version": "6.0.0",
+  "description": "Encrypted resource pack packaging tool (RSSYNC3) for Resource-Synchronization",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.4.11"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
