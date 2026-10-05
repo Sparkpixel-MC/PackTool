@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PackTool.Cli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4d99a31f03f3c3158099e11a17a8890ffe9a3f09")]
 [assembly: System.Reflection.AssemblyProductAttribute("PackTool.Cli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PackTool.Cli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

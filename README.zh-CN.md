@@ -8,7 +8,7 @@
 
 > 把 Minecraft 资源包目录打包成 **RSSYNC3 加密 `dist/`** 的 Windows 桌面工具，产物可直接托管到任意静态服务器，配合 [resource-synchronization](#相关项目) 服务端做资源包同步。
 
-RSSYNC3 打包逻辑与 Java 参考实现（`cn.ymjacky.drm.AssetEncryption` / `cn.ymjacky.io.LocalMetadata`）**逐字节一致**——同一输入目录产出的 `metadata.json` / `metadata.sha1` 与 Java 版 PackTool 完全相同，可互相替换使用。
+RSSYNC3 打包逻辑与 Java 参考实现（`cn.ymjacky.drm.AssetEncryption` / `cn.ymjacky.io.LocalMetadata`）**逐字节一致**，可互相替换使用。`metadata.json` 记录的是**加密后 dist 文件**（即客户端实际下载的文件）的 sha1/size，客户端完整性校验可直接通过；由于每个加密文件内嵌随机 GCM nonce，同一输入重复打包产生的 metadata 每次不同（但均有效）。
 
 <div align="center">
 

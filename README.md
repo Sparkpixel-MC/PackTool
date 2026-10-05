@@ -8,7 +8,7 @@
 
 > A Windows desktop tool that packs a Minecraft resource pack directory into an **RSSYNC3 encrypted `dist/`**. The output can be hosted on any static server and used together with the [resource-synchronization](#related-projects) server plugin for resource pack syncing.
 
-The RSSYNC3 packing logic is **byte-for-byte identical** to the Java reference implementation (`cn.ymjacky.drm.AssetEncryption` / `cn.ymjacky.io.LocalMetadata`) — the same input directory produces exactly the same `metadata.json` / `metadata.sha1`, so the two PackTool implementations are fully interchangeable.
+The RSSYNC3 packing logic is **byte-for-byte identical** to the Java reference implementation (`cn.ymjacky.drm.AssetEncryption` / `cn.ymjacky.io.LocalMetadata`), so the two PackTool implementations are fully interchangeable. `metadata.json` records the sha1/size of the **encrypted dist files** (what the client downloads) so client-side integrity checks pass; since each encrypted file embeds random GCM nonces, re-packing the same input yields different — but equally valid — metadata each run.
 
 <div align="center">
 

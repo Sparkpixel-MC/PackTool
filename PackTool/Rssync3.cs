@@ -335,19 +335,23 @@ public static class Rssync3
     public static PackSummary PackPack(string inputDir, string outDir, string wrapKey,
                                        PackProgressCallback? onProgress)
     {
-        var (dirs, files) = ScanPack(inputDir);
+        var (dirs, scanned) = ScanPack(inputDir);
         var distDir = Path.Combine(outDir, "dist");
         Directory.CreateDirectory(distDir);
 
+        // metadata describes the dist artifact the client downloads (encrypted
+        // file), not the plaintext source — sha1/size are taken after encryption.
+        var files = new List<FileEntry>(scanned.Count);
         int done = 0;
-        foreach (var f in files)
+        foreach (var f in scanned)
         {
             var relLocal = f.Rel.Replace('/', Path.DirectorySeparatorChar);
             var target = Path.Combine(distDir, relLocal);
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             EncryptFile(Path.Combine(inputDir, relLocal), target, wrapKey);
+            files.Add(new FileEntry(f.Rel, Sha1HexFile(target), new FileInfo(target).Length));
             done++;
-            onProgress?.Invoke(done, files.Count, f.Rel);
+            onProgress?.Invoke(done, scanned.Count, f.Rel);
         }
 
         var checksum = DirChecksum(dirs, files.ToDictionary(f => f.Rel, f => f.Sha1));

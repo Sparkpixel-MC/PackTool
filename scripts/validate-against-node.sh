@@ -23,8 +23,41 @@ w('.test/in/updater_cache.bin', 'skipped');
 node -e "require('./rssync3.js').packPack('.test/in','.test/out-node','$KEY',{},()=>{})"
 dotnet run --project PackTool.Cli -- .test/in .test/out-cs "$KEY" 2>/dev/null
 
-cmp .test/out-node/metadata.json .test/out-cs/metadata.json && echo "metadata.json: IDENTICAL"
-cmp .test/out-node/metadata.sha1 .test/out-cs/metadata.sha1 && echo "metadata.sha1: IDENTICAL"
+# Encrypted dist files embed random nonces, so ciphertext sha1s differ between
+# runs — metadata can no longer be compared byte-for-byte. Instead: same file
+# set and (deterministic) encrypted sizes, every recorded sha1 matches the
+# actual dist file, and metadata.sha1 matches a recomputed dirChecksum.
+node -e "
+const fs=require('fs'),crypto=require('crypto'),path=require('path');
+const mn=JSON.parse(fs.readFileSync('.test/out-node/metadata.json'));
+const mc=JSON.parse(fs.readFileSync('.test/out-cs/metadata.json'));
+const sn=JSON.parse(fs.readFileSync('.test/out-node/metadata.sha1')).sha1;
+const sc=JSON.parse(fs.readFileSync('.test/out-cs/metadata.sha1')).sha1;
+const fn=Object.keys(mn.file_content.files), fc=Object.keys(mc.file_content.files);
+if(mn.version!==2||mc.version!==2) throw new Error('version');
+if(!mn.encrypt||!mc.encrypt) throw new Error('encrypt flag');
+if(String(fn.sort())!==String(fc.sort())) throw new Error('file sets differ');
+for(const r of fn){
+  const e=mn.file_content.files[r], c=mc.file_content.files[r];
+  if(e.size!==c.size) throw new Error('size differs: '+r);
+  const actual=crypto.createHash('sha1').update(fs.readFileSync(path.join('.test/out-cs/dist',r))).digest('hex');
+  if(c.sha1!==actual) throw new Error('cs sha1 mismatch: '+r);
+  const actualN=crypto.createHash('sha1').update(fs.readFileSync(path.join('.test/out-node/dist',r))).digest('hex');
+  if(e.sha1!==actualN) throw new Error('node sha1 mismatch: '+r);
+}
+function dirChecksum(meta){
+  const parts=[];
+  for(const d of Object.keys(meta.file_content.dirs).sort()) parts.push(Buffer.from(d,'utf8'));
+  for(const name of Object.keys(meta.file_content.files).sort()){
+    parts.push(Buffer.from(name,'utf8'));
+    parts.push(Buffer.from(meta.file_content.files[name].sha1,'hex'));
+  }
+  return crypto.createHash('sha1').update(Buffer.concat(parts)).digest('hex');
+}
+if(dirChecksum(mn)!==sn) throw new Error('node metadata.sha1 mismatch');
+if(dirChecksum(mc)!==sc) throw new Error('cs metadata.sha1 mismatch');
+console.log('metadata: '+fn.length+' files, sets/sizes/sha1/metadata.sha1 all consistent');
+"
 
 node -e "
 const fs=require('fs'),crypto=require('crypto'),path=require('path');

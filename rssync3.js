@@ -115,6 +115,14 @@ async function packPack(inputDir, outDir, wrapKey, opts, onProgress) {
     const target = path.join(distDir, rel);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     await encryptFile(path.join(inputDir, rel), target, wrapKey);
+    // metadata describes the dist artifact the client downloads (encrypted
+    // file), not the plaintext source — sha1/size are taken after encryption.
+    const enc = fs.readFileSync(target);
+    files[rel] = {
+      sha1: crypto.createHash('sha1').update(enc).digest('hex'),
+      size: enc.length,
+      mtime: 0,
+    };
     done++;
     if (onProgress) onProgress(done, names.length, rel);
   }
